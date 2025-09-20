@@ -1,0 +1,2886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayFi - Decentralized Payments on Shardeum</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <script src="https://unpkg.com/web3@latest/dist/web3.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;600;700&display=swap');
+       
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+       
+        body {
+            font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8f9fa;
+            color: #202124;
+            overflow-x: hidden;
+        }
+       
+        .google-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+        }
+       
+        .google-card:hover {
+            box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+            transform: translateY(-2px);
+        }
+       
+        .google-btn {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            padding: 12px 24px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+       
+        .google-btn:hover {
+            background: #1557b0;
+            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.4);
+        }
+       
+        .google-btn:disabled {
+            background: #dadce0;
+            color: #5f6368;
+            cursor: not-allowed;
+        }
+       
+        .google-btn-outline {
+            background: transparent;
+            color: #1a73e8;
+            border: 1px solid #dadce0;
+        }
+       
+        .google-btn-outline:hover {
+            background: #f8f9fa;
+            border-color: #1a73e8;
+        }
+       
+        .google-input {
+            width: 100%;
+            padding: 16px;
+            border: 1px solid #dadce0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            background: white;
+        }
+       
+        .google-input:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+        }
+       
+        .google-input::placeholder {
+            color: #5f6368;
+        }
+       
+        .balance-card {
+            background: linear-gradient(135deg, #1a73e8 0%, #4285f4 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+       
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+       
+        .quick-action {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid #f1f3f4;
+        }
+       
+        .quick-action:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+       
+        .quick-action-icon {
+            width: 48px;
+            height: 48px;
+            background: #e8f0fe;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 24px;
+        }
+       
+        .transaction-item {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            transition: all 0.2s ease;
+        }
+       
+        .transaction-item:hover {
+            background: #f8f9fa;
+        }
+       
+        .transaction-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            font-size: 18px;
+        }
+       
+        .status-active {
+            background: #e8f5e8;
+            color: #137333;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+       
+        .status-paused {
+            background: #fef7e0;
+            color: #b06000;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+       
+        .status-cancelled {
+            background: #fce8e6;
+            color: #d93025;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+       
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e8eaed;
+            padding: 8px 0;
+            z-index: 1000;
+        }
+       
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+       
+        .nav-item.active {
+            color: #1a73e8;
+        }
+       
+        .nav-item:hover {
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+       
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+       
+        .nav-label {
+            font-size: 12px;
+            font-weight: 500;
+        }
+       
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+       
+        .modal.show {
+            display: flex;
+        }
+       
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+       
+        .loading-spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #1a73e8;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+       
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+       
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 3000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+        }
+       
+        .notification.show {
+            transform: translateX(0);
+        }
+       
+        .subscription-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border-left: 4px solid #1a73e8;
+        }
+       
+        .subscription-card.paused {
+            border-left-color: #fbbc04;
+        }
+       
+        .subscription-card.cancelled {
+            border-left-color: #ea4335;
+        }
+       
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #f1f3f4;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+       
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #1a73e8, #4285f4);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+       
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+                padding-bottom: 80px;
+            }
+           
+            .grid-cols-2 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+           
+            .grid-cols-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+       
+        .header {
+            background: white;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e8eaed;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+       
+        .section {
+            display: none;
+        }
+       
+        .section.active {
+            display: block;
+        }
+       
+        .wallet-status {
+            background: #e8f5e8;
+            color: #137333;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+       
+        .wallet-status .dot {
+            width: 8px;
+            height: 8px;
+            background: #34a853;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+       
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                    <span class="text-white font-bold text-lg">P</span>
+                </div>
+                <div>
+                    <h1 class="text-xl font-semibold text-gray-900">PayFi</h1>
+                    <p class="text-sm text-gray-600">Decentralized Payments</p>
+                </div>
+            </div>
+           
+            <div class="flex items-center space-x-3">
+                <div id="walletStatus" class="wallet-status hidden">
+                    <div class="dot"></div>
+                    <span id="walletAddress"></span>
+                </div>
+                <button id="connectWallet" class="google-btn">
+                    Connect Wallet
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-6 pb-20">
+        <!-- Home Section -->
+        <div id="home" class="section active">
+            <!-- Balance Card -->
+            <div class="balance-card mb-6">
+                <div class="relative z-10">
+                    <p class="text-blue-100 text-sm font-medium mb-1">PayFi Balance</p>
+                    <h2 class="text-3xl font-bold mb-2" id="balanceAmount">0.00 SHM</h2>
+                    <p class="text-blue-100 text-sm" id="balanceUSD">≈ $0.00 USD</p>
+                    <div class="flex items-center justify-between mt-4">
+                        <button onclick="showSendModal()" class="google-btn bg-white/20 hover:bg-white/30 text-white border-white/30">
+                            Send Money
+                        </button>
+                        <button onclick="showReceiveModal()" class="google-btn bg-white/20 hover:bg-white/30 text-white border-white/30">
+                            Receive
+                        </button>
+                    </div>
+                </div>
+            </div>
+           
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-4 gap-4 mb-6">
+                <div class="quick-action" onclick="showSection('subscriptions')">
+                    <div class="quick-action-icon">🔁</div>
+                    <p class="text-sm font-medium">Subscriptions</p>
+                </div>
+                <div class="quick-action" onclick="showSection('bills')">
+                    <div class="quick-action-icon">🧾</div>
+                    <p class="text-sm font-medium">Bills</p>
+                </div>
+                <div class="quick-action" onclick="showSection('split')">
+                    <div class="quick-action-icon">👥</div>
+                    <p class="text-sm font-medium">Split</p>
+                </div>
+                <div class="quick-action" onclick="showSection('rewards')">
+                    <div class="quick-action-icon">🎁</div>
+                    <p class="text-sm font-medium">Rewards</p>
+                </div>
+            </div>
+           
+            <!-- Recent Transactions -->
+            <div class="google-card p-6">
+                <h3 class="text-lg font-semibold mb-4">Recent Activity</h3>
+                <div id="recentTransactions">
+                    <div class="transaction-item">
+                        <div class="transaction-icon bg-green-100 text-green-600">✓</div>
+                        <div class="flex-1">
+                            <p class="font-medium">Netflix Subscription</p>
+                            <p class="text-sm text-gray-600">Monthly payment</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-medium">-15.99 SHM</p>
+                            <p class="text-sm text-gray-600">Today</p>
+                        </div>
+                    </div>
+                   
+                    <div class="transaction-item">
+                        <div class="transaction-icon bg-blue-100 text-blue-600">💸</div>
+                        <div class="flex-1">
+                            <p class="font-medium">Split Bill - Coffee</p>
+                            <p class="text-sm text-gray-600">with @alice, @bob</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-medium">-8.50 SHM</p>
+                            <p class="text-sm text-gray-600">Yesterday</p>
+                        </div>
+                    </div>
+                   
+                    <div class="transaction-item">
+                        <div class="transaction-icon bg-purple-100 text-purple-600">🎁</div>
+                        <div class="flex-1">
+                            <p class="font-medium">Tip to @creator</p>
+                            <p class="text-sm text-gray-600">Content appreciation</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-medium">-2.00 SHM</p>
+                            <p class="text-sm text-gray-600">2 days ago</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subscriptions Section -->
+        <div id="subscriptions" class="section">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Subscriptions</h2>
+                <button onclick="showCreateSubscriptionModal()" class="google-btn">
+                    + New Subscription
+                </button>
+            </div>
+           
+            <!-- Active Subscriptions -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-4">Active Subscriptions</h3>
+                <div id="activeSubscriptions">
+                    <div class="subscription-card">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                                    <span class="text-red-600 font-bold">N</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">Netflix Premium</h4>
+                                    <p class="text-sm text-gray-600">Entertainment</p>
+                                </div>
+                            </div>
+                            <span class="status-active">Active</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-lg font-semibold">15.99 SHM/month</span>
+                            <span class="text-sm text-gray-600">Next: Dec 15, 2024</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="pauseSubscription('netflix')" class="google-btn-outline flex-1">Pause</button>
+                            <button onclick="cancelSubscription('netflix')" class="google-btn-outline flex-1 text-red-600 border-red-300">Cancel</button>
+                        </div>
+                    </div>
+                   
+                    <div class="subscription-card">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <span class="text-green-600 font-bold">S</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">Spotify Premium</h4>
+                                    <p class="text-sm text-gray-600">Music</p>
+                                </div>
+                            </div>
+                            <span class="status-active">Active</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-lg font-semibold">9.99 SHM/month</span>
+                            <span class="text-sm text-gray-600">Next: Dec 20, 2024</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="pauseSubscription('spotify')" class="google-btn-outline flex-1">Pause</button>
+                            <button onclick="cancelSubscription('spotify')" class="google-btn-outline flex-1 text-red-600 border-red-300">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+           
+            <!-- Paused Subscriptions -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-4">Paused Subscriptions</h3>
+                <div id="pausedSubscriptions">
+                    <div class="subscription-card paused">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <span class="text-blue-600 font-bold">D</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">Disney+ Hotstar</h4>
+                                    <p class="text-sm text-gray-600">Entertainment</p>
+                                </div>
+                            </div>
+                            <span class="status-paused">Paused</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-lg font-semibold">7.99 SHM/month</span>
+                            <span class="text-sm text-gray-600">Paused on Dec 1, 2024</span>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="resumeSubscription('disney')" class="google-btn flex-1">Resume</button>
+                            <button onclick="cancelSubscription('disney')" class="google-btn-outline flex-1 text-red-600 border-red-300">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+           
+            <!-- Subscription Analytics -->
+            <div class="google-card p-6">
+                <h3 class="text-lg font-semibold mb-4">Monthly Spending</h3>
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-2xl font-bold">45.97 SHM</span>
+                    <span class="text-sm text-gray-600">This month</span>
+                </div>
+                <div class="progress-bar mb-4">
+                    <div class="progress-fill" style="width: 65%"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center">
+                        <p class="text-2xl font-bold text-green-600">3</p>
+                        <p class="text-sm text-gray-600">Active</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-2xl font-bold text-yellow-600">1</p>
+                        <p class="text-sm text-gray-600">Paused</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bills Section -->
+        <div id="bills" class="section">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Bill Payments</h2>
+                <button onclick="showPayBillModal()" class="google-btn">
+                    Pay Bill
+                </button>
+            </div>
+           
+            <!-- Upcoming Bills -->
+            <div class="google-card p-6 mb-6">
+                <h3 class="text-lg font-semibold mb-4">Upcoming Bills</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                ⚡
+                            </div>
+                            <div>
+                                <p class="font-semibold">Electricity Bill</p>
+                                <p class="text-sm text-gray-600">Due: Dec 15, 2024</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold">125.50 SHM</p>
+                            <button onclick="payBill('electricity')" class="google-btn mt-2">Pay Now</button>
+                        </div>
+                    </div>
+                   
+                    <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                💧
+                            </div>
+                            <div>
+                                <p class="font-semibold">Water Bill</p>
+                                <p class="text-sm text-gray-600">Due: Dec 18, 2024</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold">45.25 SHM</p>
+                            <button onclick="payBill('water')" class="google-btn mt-2">Pay Now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+           
+            <!-- Bill History -->
+            <div class="google-card p-6">
+                <h3 class="text-lg font-semibold mb-4">Payment History</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                ✓
+                            </div>
+                            <div>
+                                <p class="font-medium">Internet Bill</p>
+                                <p class="text-sm text-gray-600">Nov 15, 2024</p>
+                            </div>
+                        </div>
+                        <span class="font-semibold">89.99 SHM</span>
+                    </div>
+                   
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                ✓
+                            </div>
+                            <div>
+                                <p class="font-medium">Gas Bill</p>
+                                <p class="text-sm text-gray-600">Nov 10, 2024</p>
+                            </div>
+                        </div>
+                        <span class="font-semibold">67.30 SHM</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Split Bills Section -->
+        <div id="split" class="section">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">Split Bills</h2>
+                <button onclick="showCreateSplitModal()" class="google-btn">
+                    Create Split
+                </button>
+            </div>
+           
+            <!-- Active Splits -->
+            <div class="google-card p-6 mb-6">
+                <h3 class="text-lg font-semibold mb-4">Active Splits</h3>
+                <div class="space-y-4">
+                    <div class="p-4 border border-gray-200 rounded-lg">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="font-semibold">Dinner at Italian Restaurant</h4>
+                                <p class="text-sm text-gray-600">Created by you • 3 people</p>
+                            </div>
+                            <span class="text-lg font-semibold">150.00 SHM</span>
+                        </div>
+                        <div class="space-y-2 mb-3">
+                            <div class="flex justify-between text-sm">
+                                <span>You</span>
+                                <span class="text-green-600">Paid: 50.00 SHM</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span>@alice</span>
+                                <span class="text-red-600">Owes: 50.00 SHM</span>
+                            </div>
+                            <div class="flex justify-between text-sm">
+                                <span>@bob</span>
+                                <span class="text-green-600">Paid: 50.00 SHM</span>
+                            </div>
+                        </div>
+                        <button onclick="sendReminder('dinner')" class="google-btn-outline w-full">Send Reminder</button>
+                    </div>
+                </div>
+            </div>
+           
+            <!-- Split History -->
+            <div class="google-card p-6">
+                <h3 class="text-lg font-semibold mb-4">Recent Splits</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                ✓
+                            </div>
+                            <div>
+                                <p class="font-medium">Coffee & Snacks</p>
+                                <p class="text-sm text-gray-600">Settled • 2 people</p>
+                            </div>
+                        </div>
+                        <span class="font-semibold">25.50 SHM</span>
+                    </div>
+                   
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                ✓
+                            </div>
+                            <div>
+                                <p class="font-medium">Movie Tickets</p>
+                                <p class="text-sm text-gray-600">Settled • 4 people</p>
+                            </div>
+                        </div>
+                        <span class="font-semibold">80.00 SHM</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rewards Section -->
+        <div id="rewards" class="section">
+            <h2 class="text-2xl font-bold mb-6">Rewards & Cashback</h2>
+           
+            <!-- Rewards Balance -->
+            <div class="google-card p-6 mb-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                <h3 class="text-lg font-semibold mb-2">Total Rewards Earned</h3>
+                <p class="text-3xl font-bold mb-2">12.45 SHM</p>
+                <p class="text-sm opacity-90">≈ $24.90 USD</p>
+                <button onclick="claimRewards()" class="google-btn bg-white/20 hover:bg-white/30 mt-4">
+                    Claim Rewards
+                </button>
+            </div>
+           
+            <!-- Cashback Offers -->
+            <div class="google-card p-6 mb-6">
+                <h3 class="text-lg font-semibold mb-4">Cashback Offers</h3>
+                <div class="space-y-4">
+                    <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-semibold text-green-800">5% Cashback</h4>
+                                <p class="text-sm text-green-600">On all subscription payments</p>
+                            </div>
+                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">Active</span>
+                        </div>
+                    </div>
+                   
+                    <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-semibold text-blue-800">3% Cashback</h4>
+                                <p class="text-sm text-blue-600">On utility bill payments</p>
+                            </div>
+                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">Active</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+           
+            <!-- Referral Program -->
+            <div class="google-card p-6">
+                <h3 class="text-lg font-semibold mb-4">Refer Friends</h3>
+                <p class="text-gray-600 mb-4">Earn 10 SHM for each friend who joins PayFi</p>
+                <div class="flex space-x-2">
+                    <input type="text" value="payfi.app/ref/user123" class="google-input flex-1" readonly>
+                    <button onclick="copyReferralLink()" class="google-btn">Copy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="flex">
+            <div class="nav-item active" onclick="showSection('home')">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-label">Home</div>
+            </div>
+            <div class="nav-item" onclick="showSection('subscriptions')">
+                <div class="nav-icon">🔁</div>
+                <div class="nav-label">Subscriptions</div>
+            </div>
+            <div class="nav-item" onclick="showSection('bills')">
+                <div class="nav-icon">🧾</div>
+                <div class="nav-label">Bills</div>
+            </div>
+            <div class="nav-item" onclick="showSection('split')">
+                <div class="nav-icon">👥</div>
+                <div class="nav-label">Split</div>
+            </div>
+            <div class="nav-item" onclick="showSection('rewards')">
+                <div class="nav-icon">🎁</div>
+                <div class="nav-label">Rewards</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+   
+    <!-- Send Money Modal -->
+    <div id="sendModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold">Send Money</h2>
+                <button onclick="closeModal('sendModal')" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <form onsubmit="sendMoney(event)">
+                <input type="text" placeholder="Recipient address or username" class="google-input" required>
+                <input type="number" placeholder="Amount (SHM)" step="0.001" class="google-input" required>
+                <input type="text" placeholder="Note (optional)" class="google-input">
+                <button type="submit" class="google-btn w-full">Send Money</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Receive Money Modal -->
+    <div id="receiveModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold">Receive Money</h2>
+                <button onclick="closeModal('receiveModal')" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <div class="text-center">
+                <div class="w-48 h-48 bg-gray-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
+                    <span class="text-gray-500">QR Code</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-4">Scan this QR code to send money to your wallet</p>
+                <div class="flex space-x-2">
+                    <input type="text" id="walletAddressField" class="google-input flex-1" readonly>
+                    <button onclick="copyAddress()" class="google-btn">Copy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Subscription Modal -->
+    <div id="createSubscriptionModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold">Create Subscription</h2>
+                <button onclick="closeModal('createSubscriptionModal')" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <form onsubmit="createSubscription(event)">
+                <input type="text" placeholder="Service name" class="google-input" required>
+                <input type="text" placeholder="Recipient address" class="google-input" required>
+                <input type="number" placeholder="Amount (SHM)" step="0.01" class="google-input" required>
+                <select class="google-input" required>
+                    <option value="">Select frequency</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                </select>
+                <input type="date" class="google-input" required>
+                <button type="submit" class="google-btn w-full">Create Subscription</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pay Bill Modal -->
+    <div id="payBillModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold">Pay Bill</h2>
+                <button onclick="closeModal('payBillModal')" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <form onsubmit="payBillForm(event)">
+                <select class="google-input" required>
+                    <option value="">Select bill type</option>
+                    <option value="electricity">Electricity</option>
+                    <option value="water">Water</option>
+                    <option value="gas">Gas</option>
+                    <option value="internet">Internet</option>
+                    <option value="phone">Phone</option>
+                </select>
+                <input type="text" placeholder="Bill number" class="google-input" required>
+                <input type="number" placeholder="Amount (SHM)" step="0.01" class="google-input" required>
+                <div class="flex items-center space-x-2 mb-4">
+                    <input type="checkbox" id="autoPayCheckbox" class="rounded">
+                    <label for="autoPayCheckbox" class="text-sm">Set up automatic payments</label>
+                </div>
+                <button type="submit" class="google-btn w-full">Pay Bill</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Split Modal -->
+    <div id="createSplitModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold">Create Split</h2>
+                <button onclick="closeModal('createSplitModal')" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <form onsubmit="createSplit(event)">
+                <input type="text" placeholder="Description (e.g., Dinner at restaurant)" class="google-input" required>
+                <input type="number" placeholder="Total amount (SHM)" step="0.01" class="google-input" required>
+                <textarea placeholder="Add participants (one address per line)" class="google-input h-24" required></textarea>
+                <div class="flex items-center space-x-2 mb-4">
+                    <input type="checkbox" id="equalSplitCheckbox" class="rounded" checked>
+                    <label for="equalSplitCheckbox" class="text-sm">Split equally among all participants</label>
+                </div>
+                <button type="submit" class="google-btn w-full">Create Split</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <div class="flex items-center">
+            <div id="notificationIcon" class="mr-3 text-xl"></div>
+            <div>
+                <p id="notificationTitle" class="font-semibold text-gray-900"></p>
+                <p id="notificationMessage" class="text-sm text-gray-600 mt-1"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Smart Contract Configuration
+        const SHARDEUM_TESTNET = {
+            chainId: '0x1F91', // 8081 in hex
+            chainName: 'Shardeum Liberty 2.X',
+            nativeCurrency: {
+                name: 'Shardeum',
+                symbol: 'SHM',
+                decimals: 18
+            },
+            rpcUrls: ['https://liberty20.shardeum.org/'],
+            blockExplorerUrls: ['https://explorer-liberty20.shardeum.org/']
+        };
+
+        // Smart Contract ABIs
+        const SUBSCRIPTION_ABI = [
+            "function createSubscription(address recipient, uint256 amount, uint256 interval) external",
+            "function pauseSubscription(uint256 subscriptionId) external",
+            "function resumeSubscription(uint256 subscriptionId) external",
+            "function cancelSubscription(uint256 subscriptionId) external",
+            "function executePayment(uint256 subscriptionId) external",
+            "function getSubscription(uint256 subscriptionId) external view returns (tuple(address subscriber, address recipient, uint256 amount, uint256 interval, uint256 nextPayment, bool active, bool paused))",
+            "function getUserSubscriptions(address user) external view returns (uint256[])",
+            "event SubscriptionCreated(uint256 indexed subscriptionId, address indexed subscriber, address indexed recipient, uint256 amount, uint256 interval)",
+            "event SubscriptionPaused(uint256 indexed subscriptionId)",
+            "event SubscriptionResumed(uint256 indexed subscriptionId)",
+            "event SubscriptionCancelled(uint256 indexed subscriptionId)",
+            "event PaymentExecuted(uint256 indexed subscriptionId, uint256 amount)"
+        ];
+
+        const BILL_PAYMENT_ABI = [
+            "function payBill(string memory billType, string memory billNumber, uint256 amount) external payable",
+            "function setUpAutoPay(string memory billType, string memory billNumber, uint256 amount, uint256 interval) external",
+            "function getBillHistory(address user) external view returns (tuple(string billType, string billNumber, uint256 amount, uint256 timestamp)[])",
+            "event BillPaid(address indexed user, string billType, string billNumber, uint256 amount, uint256 timestamp)"
+        ];
+
+        const SPLIT_BILL_ABI = [
+            "function createSplit(address[] memory participants, uint256[] memory amounts, string memory description) external payable",
+            "function payShare(uint256 splitId) external payable",
+            "function getSplit(uint256 splitId) external view returns (tuple(address creator, address[] participants, uint256[] amounts, uint256[] paid, string description, bool completed))",
+            "function getUserSplits(address user) external view returns (uint256[])",
+            "event SplitCreated(uint256 indexed splitId, address indexed creator, string description)",
+            "event SharePaid(uint256 indexed splitId, address indexed participant, uint256 amount)"
+        ];
+
+        // Contract Addresses (Replace with actual deployed addresses)
+        const CONTRACT_ADDRESSES = {
+            subscription: "0x1234567890123456789012345678901234567890",
+            billPayment: "0x2345678901234567890123456789012345678901",
+            splitBill: "0x3456789012345678901234567890123456789012"
+        };
+
+        // Global Variables
+        let provider = null;
+        let signer = null;
+        let userAccount = null;
+        let isConnected = false;
+        let contracts = {};
+        let web3 = null;
+        let networkId = null;
+        let gasPrice = null;
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', function() {
+            initWeb3();
+            loadUserData();
+            checkMetaMaskInstallation();
+        });
+
+        // Check MetaMask Installation
+        function checkMetaMaskInstallation() {
+            if (typeof window.ethereum === 'undefined') {
+                showMetaMaskInstallPrompt();
+            } else {
+                console.log('MetaMask detected');
+                setupMetaMaskListeners();
+            }
+        }
+
+        // Show MetaMask Install Prompt
+        function showMetaMaskInstallPrompt() {
+            const connectBtn = document.getElementById('connectWallet');
+            connectBtn.innerHTML = 'Install MetaMask';
+            connectBtn.onclick = () => {
+                window.open('https://metamask.io/download/', '_blank', 'noopener,noreferrer');
+            };
+           
+            showNotification('MetaMask Required', 'Please install MetaMask to use PayFi', 'warning');
+        }
+
+        // Setup MetaMask Event Listeners
+        function setupMetaMaskListeners() {
+            if (window.ethereum) {
+                // Account changes
+                window.ethereum.on('accountsChanged', handleAccountsChanged);
+               
+                // Chain changes
+                window.ethereum.on('chainChanged', handleChainChanged);
+               
+                // Connection changes
+                window.ethereum.on('connect', handleConnect);
+                window.ethereum.on('disconnect', handleDisconnect);
+            }
+        }
+
+        // Web3 Initialization
+        async function initWeb3() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    // Initialize both ethers and web3
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    web3 = new Web3(window.ethereum);
+                   
+                    // Get network info
+                    const network = await provider.getNetwork();
+                    networkId = network.chainId;
+                   
+                    // Get gas price
+                    gasPrice = await provider.getGasPrice();
+                   
+                    // Check if already connected
+                    const accounts = await provider.listAccounts();
+                    if (accounts.length > 0) {
+                        await connectWallet();
+                    }
+                   
+                    console.log('Web3 initialized successfully');
+                } catch (error) {
+                    console.error('Web3 initialization error:', error);
+                    showNotification('Initialization Error', 'Failed to initialize Web3', 'error');
+                }
+            }
+        }
+
+        // Connect Wallet
+        async function connectWallet() {
+            try {
+                if (!provider || !web3) {
+                    showNotification('Wallet Required', 'Please install MetaMask to use PayFi', 'error');
+                    return;
+                }
+
+                const connectBtn = document.getElementById('connectWallet');
+                connectBtn.innerHTML = '<div class="loading-spinner"></div>Connecting...';
+                connectBtn.disabled = true;
+
+                // Check MetaMask availability
+                if (!window.ethereum.isMetaMask) {
+                    throw new Error('MetaMask not detected');
+                }
+
+                // Request account access with both methods
+                const accounts = await Promise.all([
+                    provider.send("eth_requestAccounts", []),
+                    web3.eth.requestAccounts()
+                ]);
+
+                if (!accounts[0] || accounts[0].length === 0) {
+                    throw new Error('No accounts found');
+                }
+               
+                // Switch to Shardeum network
+                await switchToShardeumNetwork();
+
+                // Get signer and account
+                signer = provider.getSigner();
+                userAccount = await signer.getAddress();
+               
+                // Verify account with web3
+                const web3Accounts = await web3.eth.getAccounts();
+                if (web3Accounts[0].toLowerCase() !== userAccount.toLowerCase()) {
+                    console.warn('Account mismatch between ethers and web3');
+                }
+               
+                // Initialize contracts with both libraries
+                await initializeContracts();
+               
+                // Update UI and load data
+                updateWalletUI(userAccount);
+                isConnected = true;
+               
+                // Load user data
+                await Promise.all([
+                    loadUserBalance(),
+                    loadUserSubscriptions(),
+                    loadNetworkInfo(),
+                    loadGasPrice(),
+                    loadTransactionHistoryForAccount(userAccount),
+                    processPendingTransactions(userAccount)
+                ]);
+
+                // Store connection state
+                localStorage.setItem('payfi_wallet_connected', 'true');
+                localStorage.setItem('payfi_user_account', userAccount);
+
+                showNotification('Wallet Connected', `Connected to ${userAccount.slice(0, 6)}...${userAccount.slice(-4)}`, 'success');
+
+            } catch (error) {
+                console.error('Connection failed:', error);
+               
+                let errorMessage = 'Failed to connect wallet';
+                if (error.code === 4001) {
+                    errorMessage = 'Connection rejected by user';
+                } else if (error.code === -32002) {
+                    errorMessage = 'Connection request pending';
+                } else if (error.code === -32603) {
+                    errorMessage = 'Internal error occurred';
+                } else if (error.message.includes('MetaMask')) {
+                    errorMessage = 'MetaMask not available';
+                }
+               
+                showNotification('Connection Failed', errorMessage, 'error');
+               
+                const connectBtn = document.getElementById('connectWallet');
+                connectBtn.innerHTML = 'Connect Wallet';
+                connectBtn.disabled = false;
+            }
+        }
+
+        // Switch to Shardeum Network
+        async function switchToShardeumNetwork() {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: SHARDEUM_TESTNET.chainId }],
+                });
+            } catch (switchError) {
+                // Network doesn't exist, add it
+                if (switchError.code === 4902) {
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [SHARDEUM_TESTNET],
+                        });
+                        showNotification('Network Added', 'Shardeum network added to MetaMask', 'success');
+                    } catch (addError) {
+                        throw new Error('Failed to add Shardeum network');
+                    }
+                } else {
+                    throw switchError;
+                }
+            }
+        }
+
+        // Initialize Contracts
+        async function initializeContracts() {
+            try {
+                // Initialize with ethers.js
+                contracts.subscription = new ethers.Contract(CONTRACT_ADDRESSES.subscription, SUBSCRIPTION_ABI, signer);
+                contracts.billPayment = new ethers.Contract(CONTRACT_ADDRESSES.billPayment, BILL_PAYMENT_ABI, signer);
+                contracts.splitBill = new ethers.Contract(CONTRACT_ADDRESSES.splitBill, SPLIT_BILL_ABI, signer);
+               
+                // Initialize with web3.js for additional functionality
+                contracts.web3Subscription = new web3.eth.Contract(SUBSCRIPTION_ABI, CONTRACT_ADDRESSES.subscription);
+                contracts.web3BillPayment = new web3.eth.Contract(BILL_PAYMENT_ABI, CONTRACT_ADDRESSES.billPayment);
+                contracts.web3SplitBill = new web3.eth.Contract(SPLIT_BILL_ABI, CONTRACT_ADDRESSES.splitBill);
+               
+                // Set default account for web3 contracts
+                contracts.web3Subscription.options.from = userAccount;
+                contracts.web3BillPayment.options.from = userAccount;
+                contracts.web3SplitBill.options.from = userAccount;
+               
+                console.log('Contracts initialized successfully');
+            } catch (error) {
+                console.error('Contract initialization error:', error);
+                throw new Error('Failed to initialize smart contracts');
+            }
+        }
+
+        // Update Wallet UI
+        function updateWalletUI(address) {
+            const connectBtn = document.getElementById('connectWallet');
+            const walletStatus = document.getElementById('walletStatus');
+            const walletAddress = document.getElementById('walletAddress');
+            const walletAddressField = document.getElementById('walletAddressField');
+
+            connectBtn.innerHTML = 'Connected';
+            connectBtn.onclick = disconnectWallet;
+
+            walletStatus.classList.remove('hidden');
+            walletAddress.textContent = `${address.slice(0, 6)}...${address.slice(-4)}`;
+           
+            if (walletAddressField) {
+                walletAddressField.value = address;
+            }
+        }
+
+        // MetaMask Event Handlers
+        async function handleAccountsChanged(accounts) {
+            console.log('Accounts changed:', accounts);
+           
+            if (accounts.length === 0) {
+                // User disconnected
+                await disconnectWallet();
+                showNotification('Wallet Disconnected', 'Please connect your wallet to continue', 'warning');
+            } else if (isConnected && accounts[0] !== userAccount) {
+                // User switched accounts
+                const oldAccount = userAccount;
+                const newAccount = accounts[0];
+               
+                showNotification('Account Changed', `Switching from ${formatAddress(oldAccount)} to ${formatAddress(newAccount)}...`, 'info');
+               
+                // Update to new account
+                userAccount = newAccount;
+               
+                // Update UI immediately
+                updateWalletUI(newAccount);
+               
+                // Reinitialize contracts with new signer
+                signer = provider.getSigner();
+                await initializeContracts();
+               
+                // Load data for new account
+                await Promise.all([
+                    loadUserBalance(),
+                    loadUserSubscriptions(),
+                    loadTransactionHistoryForAccount(newAccount),
+                    checkForIncomingTransfers(newAccount),
+                    processPendingTransactions(newAccount)
+                ]);
+               
+                // Store new account
+                localStorage.setItem('payfi_user_account', newAccount);
+               
+                showNotification('Account Switched', `Now using ${formatAddress(newAccount)}`, 'success');
+            }
+        }
+
+        async function handleChainChanged(chainId) {
+            console.log('Chain changed:', chainId);
+           
+            // Convert hex to decimal
+            const decimalChainId = parseInt(chainId, 16);
+            networkId = decimalChainId;
+           
+            if (decimalChainId !== 8081) { // Not Shardeum
+                showNotification('Wrong Network', 'Please switch to Shardeum network', 'warning');
+                await switchToShardeumNetwork();
+            } else {
+                showNotification('Network Changed', 'Connected to Shardeum network', 'success');
+                if (isConnected) {
+                    await loadUserBalance();
+                    await loadGasPrice();
+                }
+            }
+        }
+
+        function handleConnect(connectInfo) {
+            console.log('MetaMask connected:', connectInfo);
+        }
+
+        function handleDisconnect(error) {
+            console.log('MetaMask disconnected:', error);
+            disconnectWallet();
+        }
+
+        // Load Network Info
+        async function loadNetworkInfo() {
+            try {
+                const network = await provider.getNetwork();
+                const blockNumber = await provider.getBlockNumber();
+               
+                console.log('Network Info:', {
+                    name: network.name,
+                    chainId: network.chainId,
+                    blockNumber: blockNumber
+                });
+               
+                // Update UI with network info if needed
+                networkId = network.chainId;
+            } catch (error) {
+                console.error('Error loading network info:', error);
+            }
+        }
+
+        // Load Gas Price
+        async function loadGasPrice() {
+            try {
+                const gasPriceWei = await provider.getGasPrice();
+                gasPrice = gasPriceWei;
+               
+                const gasPriceGwei = ethers.utils.formatUnits(gasPriceWei, 'gwei');
+                console.log('Current gas price:', gasPriceGwei, 'Gwei');
+               
+                // You can update UI with gas price if needed
+            } catch (error) {
+                console.error('Error loading gas price:', error);
+            }
+        }
+
+        // Load User Balance with both libraries
+        async function loadUserBalance() {
+            try {
+                if (!userAccount || !provider) return;
+               
+                // Get balance using ethers
+                const ethersBalance = await provider.getBalance(userAccount);
+                const balanceInSHM = ethers.utils.formatEther(ethersBalance);
+               
+                // Verify with web3
+                const web3Balance = await web3.eth.getBalance(userAccount);
+                const web3BalanceInSHM = web3.utils.fromWei(web3Balance, 'ether');
+               
+                // Use ethers balance (they should be the same)
+                const finalBalance = parseFloat(balanceInSHM);
+                const balanceUSD = (finalBalance * 2.0).toFixed(2); // Assuming 1 SHM = $2
+
+                document.getElementById('balanceAmount').textContent = `${finalBalance.toFixed(4)} SHM`;
+                document.getElementById('balanceUSD').textContent = `≈ $${balanceUSD} USD`;
+               
+                // Store balance per account
+                const accountKey = `payfi_balance_${userAccount.toLowerCase()}`;
+                const previousBalance = parseFloat(localStorage.getItem(accountKey) || '0');
+                localStorage.setItem(accountKey, finalBalance.toString());
+               
+                // Check for balance changes (incoming transfers)
+                if (previousBalance > 0 && finalBalance > previousBalance) {
+                    const difference = finalBalance - previousBalance;
+                    if (difference > 0.001) { // Only notify for significant changes
+                        showNotification('Balance Updated', `+${difference.toFixed(4)} SHM received`, 'success');
+                       
+                        // Add to transaction history
+                        addTransactionToHistory({
+                            type: 'receive',
+                            amount: difference.toFixed(6),
+                            hash: 'balance_increase_' + Date.now(),
+                            timestamp: Date.now(),
+                            note: 'Balance increase detected',
+                            recipient: userAccount,
+                            sender: 'External'
+                        });
+                    }
+                }
+               
+                console.log('Balance loaded for', formatAddress(userAccount), ':', finalBalance, 'SHM');
+            } catch (error) {
+                console.error('Error loading balance:', error);
+                showNotification('Balance Error', 'Failed to load wallet balance', 'error');
+            }
+        }
+
+        // Load User Subscriptions
+        async function loadUserSubscriptions() {
+            try {
+                const subscriptionIds = await contracts.subscription.getUserSubscriptions(userAccount);
+                // Load and display subscription details
+                // This would be implemented based on the actual smart contract
+            } catch (error) {
+                console.error('Error loading subscriptions:', error);
+            }
+        }
+
+        // Navigation Functions
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+           
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+           
+            // Update nav active state
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+           
+            // Find and activate the corresponding nav item
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                if (item.onclick && item.onclick.toString().includes(sectionId)) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        // Modal Functions
+        function showSendModal() {
+            if (!isConnected) {
+                showNotification('Connect Wallet', 'Please connect your wallet first', 'warning');
+                return;
+            }
+            document.getElementById('sendModal').classList.add('show');
+        }
+
+        function showReceiveModal() {
+            if (!isConnected) {
+                showNotification('Connect Wallet', 'Please connect your wallet first', 'warning');
+                return;
+            }
+            document.getElementById('receiveModal').classList.add('show');
+        }
+
+        function showCreateSubscriptionModal() {
+            if (!isConnected) {
+                showNotification('Connect Wallet', 'Please connect your wallet first', 'warning');
+                return;
+            }
+            document.getElementById('createSubscriptionModal').classList.add('show');
+        }
+
+        function showPayBillModal() {
+            if (!isConnected) {
+                showNotification('Connect Wallet', 'Please connect your wallet first', 'warning');
+                return;
+            }
+            document.getElementById('payBillModal').classList.add('show');
+        }
+
+        function showCreateSplitModal() {
+            if (!isConnected) {
+                showNotification('Connect Wallet', 'Please connect your wallet first', 'warning');
+                return;
+            }
+            document.getElementById('createSplitModal').classList.add('show');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        // Transaction Functions with Gas Estimation
+        async function sendMoney(event) {
+            event.preventDefault();
+           
+            const form = event.target;
+            const recipient = form.elements[0].value;
+            const amount = form.elements[1].value;
+            const note = form.elements[2].value;
+
+            try {
+                const button = form.querySelector('button[type="submit"]');
+                button.innerHTML = '<div class="loading-spinner"></div>Sending...';
+                button.disabled = true;
+
+                // Validate recipient address
+                if (!web3.utils.isAddress(recipient)) {
+                    throw new Error('Invalid recipient address');
+                }
+
+                // Check balance
+                const balance = await provider.getBalance(userAccount);
+                const amountWei = ethers.utils.parseEther(amount);
+               
+                if (balance.lt(amountWei)) {
+                    throw new Error('Insufficient balance');
+                }
+
+                // Estimate gas
+                const gasEstimate = await provider.estimateGas({
+                    to: recipient,
+                    value: amountWei
+                });
+
+                // Add 20% buffer to gas estimate
+                const gasLimit = gasEstimate.mul(120).div(100);
+
+                // Get current gas price
+                const currentGasPrice = await provider.getGasPrice();
+
+                // Send transaction with ethers
+                const tx = await signer.sendTransaction({
+                    to: recipient,
+                    value: amountWei,
+                    gasLimit: gasLimit,
+                    gasPrice: currentGasPrice
+                });
+
+                showNotification('Transaction Sent', 'Transaction submitted to network...', 'info');
+
+                // Wait for confirmation
+                const receipt = await tx.wait();
+
+                // Verify with web3
+                const web3Receipt = await web3.eth.getTransactionReceipt(tx.hash);
+               
+                if (receipt.status === 1 && web3Receipt.status) {
+                    showNotification('Money Sent', `Successfully sent ${amount} SHM to ${formatAddress(recipient)}`, 'success');
+                   
+                    // Add to sender's transaction history
+                    addTransactionToHistory({
+                        type: 'send',
+                        recipient: recipient,
+                        amount: amount,
+                        hash: tx.hash,
+                        timestamp: Date.now(),
+                        note: note || `Sent to ${formatAddress(recipient)}`,
+                        sender: userAccount
+                    });
+                   
+                    // Store transaction for recipient tracking (cross-account)
+                    const recipientKey = `payfi_pending_${recipient.toLowerCase()}`;
+                    const pendingTx = {
+                        type: 'receive',
+                        sender: userAccount,
+                        amount: amount,
+                        hash: tx.hash,
+                        timestamp: Date.now(),
+                        note: note || `Received from ${formatAddress(userAccount)}`,
+                        recipient: recipient
+                    };
+                   
+                    // Store pending transaction for recipient
+                    const pendingTxs = JSON.parse(localStorage.getItem(recipientKey) || '[]');
+                    pendingTxs.push(pendingTx);
+                    localStorage.setItem(recipientKey, JSON.stringify(pendingTxs));
+                   
+                    console.log('Transaction stored for recipient:', recipient);
+                } else {
+                    throw new Error('Transaction failed');
+                }
+
+                closeModal('sendModal');
+                form.reset();
+                await loadUserBalance();
+
+            } catch (error) {
+                console.error('Send money error:', error);
+               
+                let errorMessage = error.message;
+                if (error.code === 'INSUFFICIENT_FUNDS') {
+                    errorMessage = 'Insufficient funds for transaction';
+                } else if (error.code === 'UNPREDICTABLE_GAS_LIMIT') {
+                    errorMessage = 'Unable to estimate gas for transaction';
+                } else if (error.code === 4001) {
+                    errorMessage = 'Transaction rejected by user';
+                }
+               
+                showNotification('Transaction Failed', errorMessage, 'error');
+            } finally {
+                const button = form.querySelector('button[type="submit"]');
+                button.innerHTML = 'Send Money';
+                button.disabled = false;
+            }
+        }
+
+        // Add Transaction to History (per account)
+        function addTransactionToHistory(transaction) {
+            try {
+                if (!userAccount) return;
+               
+                const accountKey = `payfi_transaction_history_${userAccount.toLowerCase()}`;
+                const history = JSON.parse(localStorage.getItem(accountKey) || '[]');
+               
+                // Add account info to transaction
+                transaction.account = userAccount.toLowerCase();
+                transaction.id = `${transaction.hash}_${Date.now()}`;
+               
+                history.unshift(transaction);
+               
+                // Keep only last 100 transactions per account
+                if (history.length > 100) {
+                    history.splice(100);
+                }
+               
+                localStorage.setItem(accountKey, JSON.stringify(history));
+                updateTransactionUI();
+            } catch (error) {
+                console.error('Error saving transaction history:', error);
+            }
+        }
+
+        // Load Transaction History for Specific Account
+        async function loadTransactionHistoryForAccount(account) {
+            try {
+                const accountKey = `payfi_transaction_history_${account.toLowerCase()}`;
+                const history = JSON.parse(localStorage.getItem(accountKey) || '[]');
+               
+                // Check for pending transactions sent to this account
+                await processPendingTransactions(account);
+               
+                // Also check for recent blockchain transactions
+                await checkRecentBlockchainTransactions(account);
+               
+                updateTransactionUI();
+                return history;
+            } catch (error) {
+                console.error('Error loading transaction history:', error);
+                return [];
+            }
+        }
+
+        // Process Pending Transactions for Account
+        async function processPendingTransactions(account) {
+            try {
+                const pendingKey = `payfi_pending_${account.toLowerCase()}`;
+                const pendingTxs = JSON.parse(localStorage.getItem(pendingKey) || '[]');
+               
+                if (pendingTxs.length === 0) return;
+               
+                const accountHistoryKey = `payfi_transaction_history_${account.toLowerCase()}`;
+                const existingHistory = JSON.parse(localStorage.getItem(accountHistoryKey) || '[]');
+               
+                // Add pending transactions to account history
+                pendingTxs.forEach(tx => {
+                    // Check if transaction already exists
+                    const exists = existingHistory.some(existing => existing.hash === tx.hash);
+                    if (!exists) {
+                        existingHistory.unshift(tx);
+                        console.log('Added pending transaction to history:', tx.hash);
+                       
+                        // Show notification if this is the current account
+                        if (account.toLowerCase() === userAccount?.toLowerCase()) {
+                            showNotification('Transaction Found', `+${tx.amount} SHM from ${formatAddress(tx.sender)}`, 'success');
+                        }
+                    }
+                });
+               
+                // Save updated history
+                localStorage.setItem(accountHistoryKey, JSON.stringify(existingHistory));
+               
+                // Clear processed pending transactions
+                localStorage.removeItem(pendingKey);
+               
+            } catch (error) {
+                console.error('Error processing pending transactions:', error);
+            }
+        }
+
+        // Check for Recent Blockchain Transactions
+        async function checkRecentBlockchainTransactions(account) {
+            try {
+                if (!provider) return;
+               
+                // Get recent blocks to check for transactions
+                const currentBlock = await provider.getBlockNumber();
+                const fromBlock = Math.max(0, currentBlock - 1000); // Check last 1000 blocks
+               
+                // Check for incoming transactions
+                const filter = {
+                    fromBlock: fromBlock,
+                    toBlock: 'latest',
+                    address: account
+                };
+               
+                // This would require a more sophisticated approach in production
+                // For now, we'll rely on the transaction history we maintain
+                console.log('Checking blockchain transactions for:', account);
+               
+            } catch (error) {
+                console.error('Error checking blockchain transactions:', error);
+            }
+        }
+
+        // Check for Incoming Transfers
+        async function checkForIncomingTransfers(account) {
+            try {
+                if (!provider) return;
+               
+                // Get current balance
+                const balance = await provider.getBalance(account);
+                const balanceInSHM = parseFloat(ethers.utils.formatEther(balance));
+               
+                // Check if balance increased compared to cached balance
+                const accountKey = `payfi_balance_${account.toLowerCase()}`;
+                const cachedBalance = parseFloat(localStorage.getItem(accountKey) || '0');
+               
+                if (balanceInSHM > cachedBalance && cachedBalance > 0) {
+                    const difference = balanceInSHM - cachedBalance;
+                   
+                    // Add incoming transfer to history
+                    addTransactionToHistory({
+                        type: 'receive',
+                        amount: difference.toFixed(6),
+                        hash: 'incoming_' + Date.now(),
+                        timestamp: Date.now(),
+                        note: 'Incoming transfer detected',
+                        recipient: account,
+                        sender: 'Unknown'
+                    });
+                   
+                    showNotification('Money Received', `+${difference.toFixed(4)} SHM received`, 'success');
+                }
+               
+                // Update cached balance
+                localStorage.setItem(accountKey, balanceInSHM.toString());
+               
+            } catch (error) {
+                console.error('Error checking for incoming transfers:', error);
+            }
+        }
+
+        // Update Transaction UI
+        function updateTransactionUI() {
+            try {
+                if (!userAccount) return;
+               
+                const accountKey = `payfi_transaction_history_${userAccount.toLowerCase()}`;
+                const history = JSON.parse(localStorage.getItem(accountKey) || '[]');
+                const container = document.getElementById('recentTransactions');
+               
+                if (!container) return;
+
+                // Clear existing real transactions, keep demo ones if no real transactions
+                if (history.length > 0) {
+                    container.innerHTML = '';
+                   
+                    // Add real transactions (show last 5)
+                    history.slice(0, 5).forEach(tx => {
+                        const transactionElement = createTransactionElement(tx);
+                        container.insertAdjacentHTML('beforeend', transactionElement);
+                    });
+                } else {
+                    // Show demo transactions if no real transactions exist
+                    container.innerHTML = `
+                        <div class="transaction-item">
+                            <div class="transaction-icon bg-green-100 text-green-600">✓</div>
+                            <div class="flex-1">
+                                <p class="font-medium">Netflix Subscription</p>
+                                <p class="text-sm text-gray-600">Monthly payment</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-medium">-15.99 SHM</p>
+                                <p class="text-sm text-gray-600">Demo</p>
+                            </div>
+                        </div>
+                       
+                        <div class="transaction-item">
+                            <div class="transaction-icon bg-blue-100 text-blue-600">💸</div>
+                            <div class="flex-1">
+                                <p class="font-medium">Split Bill - Coffee</p>
+                                <p class="text-sm text-gray-600">with @alice, @bob</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-medium">-8.50 SHM</p>
+                                <p class="text-sm text-gray-600">Demo</p>
+                            </div>
+                        </div>
+                       
+                        <div class="transaction-item">
+                            <div class="transaction-icon bg-purple-100 text-purple-600">🎁</div>
+                            <div class="flex-1">
+                                <p class="font-medium">Tip to @creator</p>
+                                <p class="text-sm text-gray-600">Content appreciation</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-medium">-2.00 SHM</p>
+                                <p class="text-sm text-gray-600">Demo</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error updating transaction UI:', error);
+            }
+        }
+
+        // Create Transaction Element
+        function createTransactionElement(tx) {
+            const date = new Date(tx.timestamp).toLocaleDateString();
+            const icon = tx.type === 'send' ? '📤' : '📥';
+            const color = tx.type === 'send' ? 'text-red-600' : 'text-green-600';
+            const sign = tx.type === 'send' ? '-' : '+';
+           
+            return `
+                <div class="transaction-item">
+                    <div class="transaction-icon bg-blue-100 text-blue-600">${icon}</div>
+                    <div class="flex-1">
+                        <p class="font-medium">${tx.note || 'Transfer'}</p>
+                        <p class="text-sm text-gray-600">${date}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-medium ${color}">${sign}${tx.amount} SHM</p>
+                        <p class="text-sm text-gray-600">
+                            <a href="https://explorer-liberty20.shardeum.org/transaction/${tx.hash}"
+                               target="_blank" rel="noopener noreferrer"
+                               class="text-blue-500 hover:underline">View</a>
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Enhanced Subscription Functions with Web3
+        async function createSubscription(event) {
+            event.preventDefault();
+           
+            const form = event.target;
+            const serviceName = form.elements[0].value;
+            const recipient = form.elements[1].value;
+            const amount = form.elements[2].value;
+            const frequency = form.elements[3].value;
+            const startDate = form.elements[4].value;
+
+            try {
+                const button = form.querySelector('button[type="submit"]');
+                button.innerHTML = '<div class="loading-spinner"></div>Creating...';
+                button.disabled = true;
+
+                // For demo purposes, create subscription locally
+                const subscription = {
+                    id: 'sub_' + Date.now(),
+                    serviceName: serviceName,
+                    recipient: recipient,
+                    amount: amount,
+                    frequency: frequency,
+                    startDate: startDate,
+                    status: 'active',
+                    txHash: 'demo_' + Date.now(),
+                    createdAt: Date.now(),
+                    nextPayment: getNextPaymentDate(frequency)
+                };
+
+                // Save subscription locally
+                saveSubscriptionLocally(subscription);
+
+                // Simulate transaction delay
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                showNotification('Subscription Created', `${serviceName} subscription activated`, 'success');
+               
+                // Add to transaction history
+                addTransactionToHistory({
+                    type: 'subscription',
+                    recipient: recipient,
+                    amount: amount,
+                    hash: subscription.txHash,
+                    timestamp: Date.now(),
+                    note: `${serviceName} subscription created`,
+                    sender: userAccount
+                });
+
+                closeModal('createSubscriptionModal');
+                form.reset();
+                await loadUserSubscriptions();
+
+            } catch (error) {
+                console.error('Create subscription error:', error);
+                showNotification('Transaction Failed', error.message, 'error');
+            } finally {
+                const button = form.querySelector('button[type="submit"]');
+                button.innerHTML = 'Create Subscription';
+                button.disabled = false;
+            }
+        }
+
+        // Get next payment date based on frequency
+        function getNextPaymentDate(frequency) {
+            const now = new Date();
+            switch(frequency) {
+                case 'weekly':
+                    return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+                case 'monthly':
+                    return new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+                case 'yearly':
+                    return new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+                default:
+                    return new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+            }
+        }
+
+        // Save Subscription Locally
+        function saveSubscriptionLocally(subscription) {
+            try {
+                const subscriptions = JSON.parse(localStorage.getItem('payfi_subscriptions') || '[]');
+                subscriptions.push(subscription);
+                localStorage.setItem('payfi_subscriptions', JSON.stringify(subscriptions));
+            } catch (error) {
+                console.error('Error saving subscription:', error);
+            }
+        }
+
+        // Load User Subscriptions with Web3
+        async function loadUserSubscriptions() {
+            try {
+                if (!contracts.subscription || !contracts.web3Subscription) {
+                    console.log('Contracts not initialized yet');
+                    return;
+                }
+
+                // Try to get subscriptions from smart contract
+                try {
+                    const subscriptionIds = await contracts.subscription.getUserSubscriptions(userAccount);
+                    console.log('User subscriptions from contract:', subscriptionIds);
+                   
+                    // Load details for each subscription
+                    for (const id of subscriptionIds) {
+                        const subscription = await contracts.subscription.getSubscription(id);
+                        console.log('Subscription details:', subscription);
+                    }
+                } catch (contractError) {
+                    console.log('Contract method not available, using local storage');
+                }
+
+                // Load from local storage as fallback
+                const localSubscriptions = JSON.parse(localStorage.getItem('payfi_subscriptions') || '[]');
+                updateSubscriptionUI(localSubscriptions);
+
+            } catch (error) {
+                console.error('Error loading subscriptions:', error);
+            }
+        }
+
+        // Update Subscription UI
+        function updateSubscriptionUI(subscriptions) {
+            const activeContainer = document.getElementById('activeSubscriptions');
+            const pausedContainer = document.getElementById('pausedSubscriptions');
+           
+            if (!activeContainer || !pausedContainer) return;
+
+            // Filter subscriptions by status
+            const activeSubscriptions = subscriptions.filter(sub => sub.status === 'active');
+            const pausedSubscriptions = subscriptions.filter(sub => sub.status === 'paused');
+            const cancelledSubscriptions = subscriptions.filter(sub => sub.status === 'cancelled');
+
+            // Update active subscriptions
+            if (activeSubscriptions.length > 0) {
+                activeContainer.innerHTML = '';
+                activeSubscriptions.forEach(sub => {
+                    const nextPayment = new Date(sub.nextPayment).toLocaleDateString();
+                    activeContainer.innerHTML += `
+                        <div class="subscription-card">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <span class="text-blue-600 font-bold">${sub.serviceName.charAt(0).toUpperCase()}</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">${sub.serviceName}</h4>
+                                        <p class="text-sm text-gray-600">${sub.frequency} subscription</p>
+                                    </div>
+                                </div>
+                                <span class="status-active">Active</span>
+                            </div>
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-lg font-semibold">${sub.amount} SHM/${sub.frequency}</span>
+                                <span class="text-sm text-gray-600">Next: ${nextPayment}</span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="pauseSubscription('${sub.id}')" class="google-btn-outline flex-1">Pause</button>
+                                <button onclick="cancelSubscription('${sub.id}')" class="google-btn-outline flex-1 text-red-600 border-red-300">Cancel</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // Update paused subscriptions
+            if (pausedSubscriptions.length > 0) {
+                pausedContainer.innerHTML = '';
+                pausedSubscriptions.forEach(sub => {
+                    const pausedDate = new Date(sub.pausedAt || sub.createdAt).toLocaleDateString();
+                    pausedContainer.innerHTML += `
+                        <div class="subscription-card paused">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                        <span class="text-yellow-600 font-bold">${sub.serviceName.charAt(0).toUpperCase()}</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold">${sub.serviceName}</h4>
+                                        <p class="text-sm text-gray-600">${sub.frequency} subscription</p>
+                                    </div>
+                                </div>
+                                <span class="status-paused">Paused</span>
+                            </div>
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-lg font-semibold">${sub.amount} SHM/${sub.frequency}</span>
+                                <span class="text-sm text-gray-600">Paused: ${pausedDate}</span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="resumeSubscription('${sub.id}')" class="google-btn flex-1">Resume</button>
+                                <button onclick="cancelSubscription('${sub.id}')" class="google-btn-outline flex-1 text-red-600 border-red-300">Cancel</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // Update analytics
+            const totalActive = activeSubscriptions.length;
+            const totalPaused = pausedSubscriptions.length;
+            const monthlySpending = activeSubscriptions.reduce((sum, sub) => {
+                const multiplier = sub.frequency === 'weekly' ? 4.33 : sub.frequency === 'yearly' ? 1/12 : 1;
+                return sum + (parseFloat(sub.amount) * multiplier);
+            }, 0);
+
+            // Update spending analytics
+            const spendingElement = document.querySelector('.google-card p .text-2xl');
+            if (spendingElement) {
+                spendingElement.textContent = `${monthlySpending.toFixed(2)} SHM`;
+            }
+
+            // Update counters
+            const activeCounter = document.querySelector('.grid-cols-2 .text-green-600');
+            const pausedCounter = document.querySelector('.grid-cols-2 .text-yellow-600');
+            if (activeCounter) activeCounter.textContent = totalActive.toString();
+            if (pausedCounter) pausedCounter.textContent = totalPaused.toString();
+        }
+
+        async function pauseSubscription(subscriptionId) {
+            try {
+                // Update subscription status locally
+                const subscriptions = JSON.parse(localStorage.getItem('payfi_subscriptions') || '[]');
+                const subIndex = subscriptions.findIndex(sub => sub.id === subscriptionId);
+               
+                if (subIndex !== -1) {
+                    subscriptions[subIndex].status = 'paused';
+                    subscriptions[subIndex].pausedAt = Date.now();
+                    localStorage.setItem('payfi_subscriptions', JSON.stringify(subscriptions));
+                   
+                    showNotification('Subscription Paused', 'Subscription has been paused', 'success');
+                    await loadUserSubscriptions();
+                }
+            } catch (error) {
+                console.error('Pause subscription error:', error);
+                showNotification('Action Failed', error.message, 'error');
+            }
+        }
+
+        async function resumeSubscription(subscriptionId) {
+            try {
+                // Update subscription status locally
+                const subscriptions = JSON.parse(localStorage.getItem('payfi_subscriptions') || '[]');
+                const subIndex = subscriptions.findIndex(sub => sub.id === subscriptionId);
+               
+                if (subIndex !== -1) {
+                    subscriptions[subIndex].status = 'active';
+                    subscriptions[subIndex].nextPayment = getNextPaymentDate(subscriptions[subIndex].frequency);
+                    delete subscriptions[subIndex].pausedAt;
+                    localStorage.setItem('payfi_subscriptions', JSON.stringify(subscriptions));
+                   
+                    showNotification('Subscription Resumed', 'Subscription has been resumed', 'success');
+                    await loadUserSubscriptions();
+                }
+            } catch (error) {
+                console.error('Resume subscription error:', error);
+                showNotification('Action Failed', error.message, 'error');
+            }
+        }
+
+        async function cancelSubscription(subscriptionId) {
+            if (!confirm('Are you sure you want to cancel this subscription?')) {
+                return;
+            }
+
+            try {
+                // Update subscription status locally
+                const subscriptions = JSON.parse(localStorage.getItem('payfi_subscriptions') || '[]');
+                const subIndex = subscriptions.findIndex(sub => sub.id === subscriptionId);
+               
+                if (subIndex !== -1) {
+                    subscriptions[subIndex].status = 'cancelled';
+                    subscriptions[subIndex].cancelledAt = Date.now();
+                    localStorage.setItem('payfi_subscriptions', JSON.stringify(subscriptions));
+                   
+                    showNotification('Subscription Cancelled', 'Subscription has been cancelled', 'success');
+                    await loadUserSubscriptions();
+                }
+            } catch (error) {
+                console.error('Cancel subscription error:', error);
+                showNotification('Action Failed', error.message, 'error');
+            }
+        }
+
+        // Bill Payment Functions
+        async function payBillForm(event) {
+            event.preventDefault();
+           
+            const form = event.target;
+            const billType = form.elements[0].value;
+            const billNumber = form.elements[1].value;
+            const amount = form.elements[2].value;
+            const autoPay = form.elements[3].checked;
+
+            try {
+                const button = form.querySelector('button[type="submit"]');
+                button.innerHTML = '<div class="loading-spinner"></div>Processing...';
+                button.disabled = true;
+
+                // Simulate payment processing
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                // Create bill payment record
+                const billPayment = {
+                    id: 'bill_' + Date.now(),
+                    billType: billType,
+                    billNumber: billNumber,
+                    amount: amount,
+                    autoPay: autoPay,
+                    paidAt: Date.now(),
+                    txHash: 'demo_bill_' + Date.now(),
+                    status: 'paid'
+                };
+
+                // Save bill payment locally
+                saveBillPaymentLocally(billPayment);
+
+                // Add to transaction history
+                addTransactionToHistory({
+                    type: 'bill',
+                    recipient: `${billType.toUpperCase()} Company`,
+                    amount: amount,
+                    hash: billPayment.txHash,
+                    timestamp: Date.now(),
+                    note: `${billType.charAt(0).toUpperCase() + billType.slice(1)} bill payment`,
+                    sender: userAccount
+                });
+
+                showNotification('Bill Paid', `${billType.charAt(0).toUpperCase() + billType.slice(1)} bill payment successful`, 'success');
+                closeModal('payBillModal');
+                form.reset();
+                await loadBillHistory();
+
+            } catch (error) {
+                console.error('Pay bill error:', error);
+                showNotification('Payment Failed', error.message, 'error');
+            } finally {
+                const button = form.querySelector('button[type="submit"]');
+                button.innerHTML = 'Pay Bill';
+                button.disabled = false;
+            }
+        }
+
+        async function payBill(billType) {
+            // Quick pay function for upcoming bills
+            try {
+                const amounts = {
+                    electricity: '125.50',
+                    water: '45.25'
+                };
+
+                // Simulate payment processing
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                // Create bill payment record
+                const billPayment = {
+                    id: 'bill_' + Date.now(),
+                    billType: billType,
+                    billNumber: `${billType.toUpperCase()}-${Date.now()}`,
+                    amount: amounts[billType],
+                    autoPay: false,
+                    paidAt: Date.now(),
+                    txHash: 'demo_quick_' + Date.now(),
+                    status: 'paid'
+                };
+
+                // Save bill payment locally
+                saveBillPaymentLocally(billPayment);
+
+                // Add to transaction history
+                addTransactionToHistory({
+                    type: 'bill',
+                    recipient: `${billType.toUpperCase()} Company`,
+                    amount: amounts[billType],
+                    hash: billPayment.txHash,
+                    timestamp: Date.now(),
+                    note: `${billType.charAt(0).toUpperCase() + billType.slice(1)} bill payment`,
+                    sender: userAccount
+                });
+
+                showNotification('Bill Paid', `${billType.charAt(0).toUpperCase() + billType.slice(1)} bill payment successful`, 'success');
+                await loadBillHistory();
+                updateUpcomingBills();
+
+            } catch (error) {
+                console.error('Pay bill error:', error);
+                showNotification('Payment Failed', error.message, 'error');
+            }
+        }
+
+        // Save Bill Payment Locally
+        function saveBillPaymentLocally(billPayment) {
+            try {
+                const bills = JSON.parse(localStorage.getItem('payfi_bills') || '[]');
+                bills.unshift(billPayment);
+                localStorage.setItem('payfi_bills', JSON.stringify(bills));
+            } catch (error) {
+                console.error('Error saving bill payment:', error);
+            }
+        }
+
+        // Load Bill History
+        async function loadBillHistory() {
+            try {
+                const bills = JSON.parse(localStorage.getItem('payfi_bills') || '[]');
+                updateBillHistoryUI(bills);
+            } catch (error) {
+                console.error('Error loading bill history:', error);
+            }
+        }
+
+        // Update Bill History UI
+        function updateBillHistoryUI(bills) {
+            const historyContainer = document.querySelector('#bills .google-card:last-child .space-y-3');
+            if (!historyContainer) return;
+
+            if (bills.length > 0) {
+                historyContainer.innerHTML = '';
+                bills.slice(0, 5).forEach(bill => {
+                    const date = new Date(bill.paidAt).toLocaleDateString();
+                    const billTypeFormatted = bill.billType.charAt(0).toUpperCase() + bill.billType.slice(1);
+                   
+                    historyContainer.innerHTML += `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                    ✓
+                                </div>
+                                <div>
+                                    <p class="font-medium">${billTypeFormatted} Bill</p>
+                                    <p class="text-sm text-gray-600">${date}</p>
+                                </div>
+                            </div>
+                            <span class="font-semibold">${bill.amount} SHM</span>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // Update Upcoming Bills (remove paid bills)
+        function updateUpcomingBills() {
+            // This would typically update the upcoming bills section
+            // For demo purposes, we'll keep the existing bills
+            console.log('Upcoming bills updated');
+        }
+
+        // Split Bill Functions
+        async function createSplit(event) {
+            event.preventDefault();
+           
+            const form = event.target;
+            const description = form.elements[0].value;
+            const totalAmount = form.elements[1].value;
+            const participantsText = form.elements[2].value;
+            const equalSplit = form.elements[3].checked;
+
+            try {
+                const button = form.querySelector('button[type="submit"]');
+                button.innerHTML = '<div class="loading-spinner"></div>Creating...';
+                button.disabled = true;
+
+                const participants = participantsText.split('\n').filter(addr => addr.trim());
+                if (participants.length === 0) {
+                    throw new Error('Please add at least one participant');
+                }
+
+                // Calculate amounts per participant
+                const amountPerPerson = equalSplit ?
+                    (parseFloat(totalAmount) / (participants.length + 1)).toFixed(6) : // +1 for creator
+                    (parseFloat(totalAmount) / participants.length).toFixed(6);
+
+                // Simulate split creation
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                // Create split record
+                const split = {
+                    id: 'split_' + Date.now(),
+                    description: description,
+                    totalAmount: totalAmount,
+                    amountPerPerson: amountPerPerson,
+                    participants: participants,
+                    creator: userAccount,
+                    equalSplit: equalSplit,
+                    createdAt: Date.now(),
+                    status: 'active',
+                    payments: {},
+                    txHash: 'demo_split_' + Date.now()
+                };
+
+                // Mark creator as paid (assuming they paid upfront)
+                split.payments[userAccount] = {
+                    amount: amountPerPerson,
+                    paidAt: Date.now(),
+                    status: 'paid'
+                };
+
+                // Save split locally
+                saveSplitLocally(split);
+
+                // Add to transaction history
+                addTransactionToHistory({
+                    type: 'split',
+                    recipient: 'Split Bill',
+                    amount: totalAmount,
+                    hash: split.txHash,
+                    timestamp: Date.now(),
+                    note: `Split: ${description}`,
+                    sender: userAccount
+                });
+
+                showNotification('Split Created', 'Bill split created successfully', 'success');
+                closeModal('createSplitModal');
+                form.reset();
+                await loadSplitHistory();
+
+            } catch (error) {
+                console.error('Create split error:', error);
+                showNotification('Creation Failed', error.message, 'error');
+            } finally {
+                const button = form.querySelector('button[type="submit"]');
+                button.innerHTML = 'Create Split';
+                button.disabled = false;
+            }
+        }
+
+        async function sendReminder(splitId) {
+            try {
+                // Simulate sending reminder
+                await new Promise(resolve => setTimeout(resolve, 1000));
+               
+                showNotification('Reminder Sent', 'Payment reminders sent to participants', 'success');
+               
+                // Update reminder count
+                const splits = JSON.parse(localStorage.getItem('payfi_splits') || '[]');
+                const splitIndex = splits.findIndex(split => split.id === splitId);
+                if (splitIndex !== -1) {
+                    splits[splitIndex].lastReminder = Date.now();
+                    splits[splitIndex].reminderCount = (splits[splitIndex].reminderCount || 0) + 1;
+                    localStorage.setItem('payfi_splits', JSON.stringify(splits));
+                }
+            } catch (error) {
+                console.error('Send reminder error:', error);
+                showNotification('Reminder Failed', error.message, 'error');
+            }
+        }
+
+        // Save Split Locally
+        function saveSplitLocally(split) {
+            try {
+                const splits = JSON.parse(localStorage.getItem('payfi_splits') || '[]');
+                splits.unshift(split);
+                localStorage.setItem('payfi_splits', JSON.stringify(splits));
+            } catch (error) {
+                console.error('Error saving split:', error);
+            }
+        }
+
+        // Load Split History
+        async function loadSplitHistory() {
+            try {
+                const splits = JSON.parse(localStorage.getItem('payfi_splits') || '[]');
+                updateSplitHistoryUI(splits);
+            } catch (error) {
+                console.error('Error loading split history:', error);
+            }
+        }
+
+        // Update Split History UI
+        function updateSplitHistoryUI(splits) {
+            const activeSplitsContainer = document.querySelector('#split .google-card:first-child .space-y-4');
+            const recentSplitsContainer = document.querySelector('#split .google-card:last-child .space-y-3');
+           
+            if (!activeSplitsContainer || !recentSplitsContainer) return;
+
+            // Filter splits
+            const activeSplits = splits.filter(split => split.status === 'active');
+            const settledSplits = splits.filter(split => split.status === 'settled');
+
+            // Update active splits
+            if (activeSplits.length > 0) {
+                activeSplitsContainer.innerHTML = '';
+                activeSplits.forEach(split => {
+                    const paidCount = Object.keys(split.payments).length;
+                    const totalParticipants = split.participants.length + 1; // +1 for creator
+                    const owedAmount = (split.participants.length * parseFloat(split.amountPerPerson)).toFixed(2);
+                   
+                    activeSplitsContainer.innerHTML += `
+                        <div class="p-4 border border-gray-200 rounded-lg">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h4 class="font-semibold">${split.description}</h4>
+                                    <p class="text-sm text-gray-600">Created by you • ${totalParticipants} people</p>
+                                </div>
+                                <span class="text-lg font-semibold">${split.totalAmount} SHM</span>
+                            </div>
+                            <div class="space-y-2 mb-3">
+                                <div class="flex justify-between text-sm">
+                                    <span>You</span>
+                                    <span class="text-green-600">Paid: ${split.amountPerPerson} SHM</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span>Others (${split.participants.length})</span>
+                                    <span class="text-red-600">Owe: ${owedAmount} SHM</span>
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    ${paidCount}/${totalParticipants} participants paid
+                                </div>
+                            </div>
+                            <button onclick="sendReminder('${split.id}')" class="google-btn-outline w-full">Send Reminder</button>
+                        </div>
+                    `;
+                });
+            }
+
+            // Update recent splits
+            if (settledSplits.length > 0) {
+                recentSplitsContainer.innerHTML = '';
+                settledSplits.slice(0, 3).forEach(split => {
+                    const date = new Date(split.createdAt).toLocaleDateString();
+                    const totalParticipants = split.participants.length + 1;
+                   
+                    recentSplitsContainer.innerHTML += `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                    ✓
+                                </div>
+                                <div>
+                                    <p class="font-medium">${split.description}</p>
+                                    <p class="text-sm text-gray-600">Settled • ${totalParticipants} people</p>
+                                </div>
+                            </div>
+                            <span class="font-semibold">${split.totalAmount} SHM</span>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // Mark Split as Settled
+        async function settleSplit(splitId) {
+            try {
+                const splits = JSON.parse(localStorage.getItem('payfi_splits') || '[]');
+                const splitIndex = splits.findIndex(split => split.id === splitId);
+               
+                if (splitIndex !== -1) {
+                    splits[splitIndex].status = 'settled';
+                    splits[splitIndex].settledAt = Date.now();
+                    localStorage.setItem('payfi_splits', JSON.stringify(splits));
+                   
+                    showNotification('Split Settled', 'All payments received and split settled', 'success');
+                    await loadSplitHistory();
+                }
+            } catch (error) {
+                console.error('Settle split error:', error);
+                showNotification('Settlement Failed', error.message, 'error');
+            }
+        }
+
+        // Utility Functions
+        function copyAddress() {
+            const addressField = document.getElementById('walletAddressField');
+            addressField.select();
+            document.execCommand('copy');
+            showNotification('Address Copied', 'Wallet address copied to clipboard', 'success');
+        }
+
+        function copyReferralLink() {
+            const referralLink = 'payfi.app/ref/user123';
+            navigator.clipboard.writeText(referralLink);
+            showNotification('Link Copied', 'Referral link copied to clipboard', 'success');
+        }
+
+        async function claimRewards() {
+            try {
+                const rewardsBalance = parseFloat(document.querySelector('#rewards .text-3xl').textContent.split(' ')[0]);
+               
+                if (rewardsBalance <= 0) {
+                    showNotification('No Rewards', 'You have no rewards to claim', 'warning');
+                    return;
+                }
+
+                // Simulate claiming process
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                // Add rewards to main balance (simulate)
+                const currentBalance = parseFloat(document.getElementById('balanceAmount').textContent.split(' ')[0]);
+                const newBalance = currentBalance + rewardsBalance;
+               
+                document.getElementById('balanceAmount').textContent = `${newBalance.toFixed(4)} SHM`;
+                document.getElementById('balanceUSD').textContent = `≈ $${(newBalance * 2.0).toFixed(2)} USD`;
+
+                // Reset rewards balance
+                document.querySelector('#rewards .text-3xl').textContent = '0.00 SHM';
+                document.querySelector('#rewards .text-sm.opacity-90').textContent = '≈ $0.00 USD';
+
+                // Add to transaction history
+                addTransactionToHistory({
+                    type: 'reward',
+                    recipient: userAccount,
+                    amount: rewardsBalance.toFixed(6),
+                    hash: 'reward_claim_' + Date.now(),
+                    timestamp: Date.now(),
+                    note: 'Rewards claimed',
+                    sender: 'PayFi Rewards'
+                });
+
+                // Save rewards claim
+                saveRewardsClaim({
+                    amount: rewardsBalance,
+                    claimedAt: Date.now(),
+                    txHash: 'reward_claim_' + Date.now()
+                });
+
+                showNotification('Rewards Claimed', `Successfully claimed ${rewardsBalance.toFixed(4)} SHM rewards`, 'success');
+                await loadUserBalance();
+               
+            } catch (error) {
+                console.error('Claim rewards error:', error);
+                showNotification('Claim Failed', error.message, 'error');
+            }
+        }
+
+        // Save Rewards Claim
+        function saveRewardsClaim(claim) {
+            try {
+                const claims = JSON.parse(localStorage.getItem('payfi_rewards_claims') || '[]');
+                claims.unshift(claim);
+                localStorage.setItem('payfi_rewards_claims', JSON.stringify(claims));
+            } catch (error) {
+                console.error('Error saving rewards claim:', error);
+            }
+        }
+
+        // Calculate and Update Rewards
+        function calculateRewards() {
+            try {
+                // Calculate rewards based on transactions
+                const accountKey = `payfi_transaction_history_${userAccount?.toLowerCase()}`;
+                const transactions = JSON.parse(localStorage.getItem(accountKey) || '[]');
+               
+                let totalRewards = 0;
+               
+                transactions.forEach(tx => {
+                    const amount = parseFloat(tx.amount);
+                    if (tx.type === 'subscription') {
+                        totalRewards += amount * 0.05; // 5% cashback on subscriptions
+                    } else if (tx.type === 'bill') {
+                        totalRewards += amount * 0.03; // 3% cashback on bills
+                    } else if (tx.type === 'split') {
+                        totalRewards += amount * 0.02; // 2% cashback on splits
+                    }
+                });
+
+                // Add referral rewards (demo)
+                const referralRewards = parseFloat(localStorage.getItem('payfi_referral_rewards') || '0');
+                totalRewards += referralRewards;
+
+                // Update rewards display
+                const rewardsElement = document.querySelector('#rewards .text-3xl');
+                const rewardsUSDElement = document.querySelector('#rewards .text-sm.opacity-90');
+               
+                if (rewardsElement && rewardsUSDElement) {
+                    rewardsElement.textContent = `${totalRewards.toFixed(2)} SHM`;
+                    rewardsUSDElement.textContent = `≈ $${(totalRewards * 2.0).toFixed(2)} USD`;
+                }
+
+                return totalRewards;
+            } catch (error) {
+                console.error('Error calculating rewards:', error);
+                return 0;
+            }
+        }
+
+        // Add Referral Rewards
+        function addReferralReward(amount = 10) {
+            try {
+                const currentRewards = parseFloat(localStorage.getItem('payfi_referral_rewards') || '0');
+                const newRewards = currentRewards + amount;
+                localStorage.setItem('payfi_referral_rewards', newRewards.toString());
+               
+                showNotification('Referral Bonus', `+${amount} SHM referral reward earned!`, 'success');
+                calculateRewards();
+            } catch (error) {
+                console.error('Error adding referral reward:', error);
+            }
+        }
+
+        // Simulate Referral (for demo)
+        function simulateReferral() {
+            addReferralReward(10);
+        }
+
+        // Notification System
+        function showNotification(title, message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const icon = document.getElementById('notificationIcon');
+            const titleEl = document.getElementById('notificationTitle');
+            const messageEl = document.getElementById('notificationMessage');
+
+            const icons = {
+                success: '✅',
+                error: '❌',
+                info: 'ℹ️',
+                warning: '⚠️'
+            };
+
+            icon.textContent = icons[type] || icons.info;
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+
+            notification.classList.add('show');
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        // Enhanced Load User Data
+        async function loadUserData() {
+            try {
+                // Check if wallet was previously connected
+                const wasConnected = localStorage.getItem('payfi_wallet_connected');
+                const savedAccount = localStorage.getItem('payfi_user_account');
+               
+                if (wasConnected === 'true' && savedAccount && window.ethereum) {
+                    // Try to reconnect automatically
+                    const accounts = await provider.listAccounts();
+                    if (accounts.length > 0 && accounts[0].toLowerCase() === savedAccount.toLowerCase()) {
+                        await connectWallet();
+                    }
+                }
+
+                // Load cached transaction history
+                updateTransactionUI();
+               
+                // Load cached balance
+                const cachedBalance = localStorage.getItem('payfi_balance');
+                if (cachedBalance && !isConnected) {
+                    document.getElementById('balanceAmount').textContent = `${parseFloat(cachedBalance).toFixed(4)} SHM`;
+                    document.getElementById('balanceUSD').textContent = `≈ $${(parseFloat(cachedBalance) * 2.0).toFixed(2)} USD`;
+                }
+
+                // Load all section data
+                await Promise.all([
+                    loadUserSubscriptions(),
+                    loadBillHistory(),
+                    loadSplitHistory()
+                ]);
+
+                // Calculate rewards
+                if (userAccount) {
+                    calculateRewards();
+                }
+
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        // Enhanced Navigation with Data Loading
+        async function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+           
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+           
+            // Update nav active state
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+           
+            // Find and activate the corresponding nav item
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                if (item.onclick && item.onclick.toString().includes(sectionId)) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Load section-specific data
+            try {
+                switch(sectionId) {
+                    case 'home':
+                        updateTransactionUI();
+                        if (userAccount) {
+                            await loadUserBalance();
+                        }
+                        break;
+                    case 'subscriptions':
+                        await loadUserSubscriptions();
+                        break;
+                    case 'bills':
+                        await loadBillHistory();
+                        break;
+                    case 'split':
+                        await loadSplitHistory();
+                        break;
+                    case 'rewards':
+                        if (userAccount) {
+                            calculateRewards();
+                        }
+                        break;
+                }
+            } catch (error) {
+                console.error(`Error loading ${sectionId} data:`, error);
+            }
+        }
+
+        // Enhanced Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Connect wallet button
+            const connectBtn = document.getElementById('connectWallet');
+            if (connectBtn) {
+                connectBtn.addEventListener('click', connectWallet);
+            }
+
+            // Close modals when clicking outside
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal')) {
+                    e.target.classList.remove('show');
+                }
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    // Close any open modal
+                    document.querySelectorAll('.modal.show').forEach(modal => {
+                        modal.classList.remove('show');
+                    });
+                }
+            });
+
+            // Auto-refresh balance every 30 seconds if connected
+            setInterval(async () => {
+                if (isConnected && userAccount) {
+                    try {
+                        await loadUserBalance();
+                    } catch (error) {
+                        console.error('Auto-refresh balance error:', error);
+                    }
+                }
+            }, 30000);
+        });
+
+        // Enhanced Disconnect Wallet
+        function disconnectWallet() {
+            // Clear all state
+            provider = null;
+            signer = null;
+            userAccount = null;
+            isConnected = false;
+            contracts = {};
+            web3 = null;
+            networkId = null;
+            gasPrice = null;
+
+            // Clear localStorage
+            localStorage.removeItem('payfi_wallet_connected');
+            localStorage.removeItem('payfi_user_account');
+            localStorage.removeItem('payfi_balance');
+
+            // Reset UI
+            const connectBtn = document.getElementById('connectWallet');
+            const walletStatus = document.getElementById('walletStatus');
+           
+            connectBtn.innerHTML = 'Connect Wallet';
+            connectBtn.onclick = connectWallet;
+            connectBtn.disabled = false;
+           
+            walletStatus.classList.add('hidden');
+
+            // Reset balance display
+            document.getElementById('balanceAmount').textContent = '0.00 SHM';
+            document.getElementById('balanceUSD').textContent = '≈ $0.00 USD';
+
+            // Clear wallet address field
+            const walletAddressField = document.getElementById('walletAddressField');
+            if (walletAddressField) {
+                walletAddressField.value = '';
+            }
+
+            showNotification('Wallet Disconnected', 'Successfully disconnected from MetaMask', 'info');
+        }
+
+        // Utility Functions for Web3
+        function formatAddress(address) {
+            if (!address) return '';
+            return `${address.slice(0, 6)}...${address.slice(-4)}`;
+        }
+
+        function formatAmount(amount, decimals = 4) {
+            return parseFloat(amount).toFixed(decimals);
+        }
+
+        function formatTransactionHash(hash) {
+            if (!hash) return '';
+            return `${hash.slice(0, 10)}...${hash.slice(-8)}`;
+        }
+
+        // Check if MetaMask is locked
+        async function isMetaMaskLocked() {
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                return accounts.length === 0;
+            } catch (error) {
+                return true;
+            }
+        }
+
+        // Get network name from chain ID
+        function getNetworkName(chainId) {
+            const networks = {
+                1: 'Ethereum Mainnet',
+                3: 'Ropsten Testnet',
+                4: 'Rinkeby Testnet',
+                5: 'Goerli Testnet',
+                42: 'Kovan Testnet',
+                137: 'Polygon Mainnet',
+                80001: 'Polygon Mumbai',
+                8081: 'Shardeum Liberty 2.X'
+            };
+            return networks[chainId] || `Unknown Network (${chainId})`;
+        }
+
+        // Error handling for common Web3 errors
+        function handleWeb3Error(error) {
+            console.error('Web3 Error:', error);
+           
+            let userMessage = 'An error occurred';
+           
+            if (error.code === 4001) {
+                userMessage = 'Transaction rejected by user';
+            } else if (error.code === -32603) {
+                userMessage = 'Internal JSON-RPC error';
+            } else if (error.code === -32602) {
+                userMessage = 'Invalid method parameters';
+            } else if (error.message.includes('insufficient funds')) {
+                userMessage = 'Insufficient funds for transaction';
+            } else if (error.message.includes('gas')) {
+                userMessage = 'Gas estimation failed';
+            } else if (error.message.includes('nonce')) {
+                userMessage = 'Transaction nonce error';
+            }
+           
+            return userMessage;
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9820a40a63d684f5',t:'MTc1ODM2NDE1Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
